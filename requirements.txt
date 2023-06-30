@@ -6,5 +6,4 @@ torch >= 2.0.1
 torchvision >= 0.15.2
 torchmetrics >= 0.11.4
 transformers >= 4.30.2
-lightning >= 2.0.3
-deepspeed >= 0.9.4
+lightning @ git+https://github.com/Lightning-AI/lightning@master

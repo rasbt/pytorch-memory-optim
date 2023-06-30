@@ -22,7 +22,7 @@ Test accuracy 95.85%
 
 # 01-2_pytorch-fabric.py
 
-- same as above but using fabric
+- same as above but using Fabric
 - same results as expected
 
 ```
@@ -37,6 +37,8 @@ Test accuracy 96.06%
 
 # 02_mixed-precision.py
 
+- like above, but enables `"16-mixed"` training.
+
 ```
 Epoch: 0001/0001 | Batch 0000/0703 | Loss: 2.4105
 Epoch: 0001/0001 | Batch 0300/0703 | Loss: 0.1088
@@ -46,7 +48,10 @@ Time elapsed 3.45 min
 Memory used: 18.21 GB
 Test accuracy 95.71%
 ```
+
 # 03_bfloat16.py
+
+- like above, but enables `"bf16-true"` training.
 
 ```
 Epoch: 0001/0001 | Batch 0000/0703 | Loss: 2.4101
@@ -126,30 +131,78 @@ Memory used: 3.91 GB
 Test accuracy 97.27%
 ```
 
-# 06 scheduler
+# 06_sgd-with-scheduler.py
 
-# 07 init module
+- like above but with SGD + Cosine Decay Scheduler instead of ADAM
 
-07-01_init_module.py
+```
+Epoch: 0001/0001 | Batch 0000/11250 | Loss: 0.6012
+Epoch: 0001/0001 | Batch 0300/11250 | Loss: 0.0472
+Epoch: 0001/0001 | Batch 0600/11250 | Loss: 0.0110
+Epoch: 0001/0001 | Batch 0900/11250 | Loss: 0.0215
+Epoch: 0001/0001 | Batch 1200/11250 | Loss: 0.0152
+Epoch: 0001/0001 | Batch 1500/11250 | Loss: 0.0134
+Epoch: 0001/0001 | Batch 1800/11250 | Loss: 0.0036
+Epoch: 0001/0001 | Batch 2100/11250 | Loss: 0.0223
+Epoch: 0001/0001 | Batch 2400/11250 | Loss: 0.0230
+Epoch: 0001/0001 | Batch 2700/11250 | Loss: 0.0293
+Epoch: 0001/0001 | Batch 3000/11250 | Loss: 0.0567
+Epoch: 0001/0001 | Batch 3300/11250 | Loss: 0.0009
+Epoch: 0001/0001 | Batch 3600/11250 | Loss: 0.0428
+Epoch: 0001/0001 | Batch 3900/11250 | Loss: 0.0081
+Epoch: 0001/0001 | Batch 4200/11250 | Loss: 0.0612
+Epoch: 0001/0001 | Batch 4500/11250 | Loss: 0.0429
+Epoch: 0001/0001 | Batch 4800/11250 | Loss: 0.0118
+Epoch: 0001/0001 | Batch 5100/11250 | Loss: 0.0041
+Epoch: 0001/0001 | Batch 5400/11250 | Loss: 0.0021
+Epoch: 0001/0001 | Batch 5700/11250 | Loss: 0.0076
+Epoch: 0001/0001 | Batch 6000/11250 | Loss: 0.0027
+Epoch: 0001/0001 | Batch 6300/11250 | Loss: 0.0012
+Epoch: 0001/0001 | Batch 6600/11250 | Loss: 0.0752
+Epoch: 0001/0001 | Batch 6900/11250 | Loss: 0.0061
+Epoch: 0001/0001 | Batch 7200/11250 | Loss: 0.0087
+Epoch: 0001/0001 | Batch 7500/11250 | Loss: 0.0004
+Epoch: 0001/0001 | Batch 7800/11250 | Loss: 0.0017
+Epoch: 0001/0001 | Batch 8100/11250 | Loss: 0.0259
+Epoch: 0001/0001 | Batch 8400/11250 | Loss: 0.0844
+Epoch: 0001/0001 | Batch 8700/11250 | Loss: 0.0777
+Epoch: 0001/0001 | Batch 9000/11250 | Loss: 0.0071
+Epoch: 0001/0001 | Batch 9300/11250 | Loss: 0.0035
+Epoch: 0001/0001 | Batch 9600/11250 | Loss: 0.0002
+Epoch: 0001/0001 | Batch 9900/11250 | Loss: 0.0017
+Epoch: 0001/0001 | Batch 10200/11250 | Loss: 0.2672
+Epoch: 0001/0001 | Batch 10500/11250 | Loss: 0.0072
+Epoch: 0001/0001 | Batch 10800/11250 | Loss: 0.0042
+Epoch: 0001/0001 | Batch 11100/11250 | Loss: 0.0061
+Epoch: 0001/0001 | Train acc.: 95.88% | Val acc.: 97.12%
+Time elapsed 12.89 min
+Memory used: 2.02 GB
+Test accuracy 96.91%
+```
+
+# 07_xx_init-module.py
+
+07-01_init_module.py:
+
+```
 Without Fabric
 CPU Memory used: 0.60 GB
 GPU Memory used: 1.24 GB
+```
 
-07-02_init_module.py
-Without init_module
-CPU Memory used: 1.15 GB
-GPU Memory used: 0.65 GB
+07-03_init_module.py:
 
-07-03_init_module.py
+```
 With init_module
 CPU Memory used: 0.70 GB
 GPU Memory used: 0.65 GB
+```
 
 
+# 08_fsdp-with-01-2.py
 
-# 08 FSDP ADAM
-
-- compares to 01-02
+- Fully Sharded Data Parallelism on 4 GPUs
+- compare to the `01-2_pytorch-fabric.py` baseline
 
 
 ```
@@ -166,9 +219,9 @@ Test accuracy 97.13%
 
 
 
-# 09 FSDP Offload
+# 09 FSDP CPU Offload
 
-- compares to 01-02
+- Similar to above but with CPU offloading.
 
 ```
 Epoch: 0001/0001 | Batch 0000/0175 | Loss: 2.4957
@@ -181,7 +234,9 @@ Memory used: 6.03 GB
 Test accuracy 97.23%
 ```
 
-## 10
+## 10_delay-allocation.py
+
+- like above but with `init_module` context
 
 ```
 Epoch: 0001/0001 | Batch 0000/0175 | Loss: 2.4957
@@ -194,8 +249,9 @@ Memory used: 6.03 GB
 Test accuracy 97.22%
 ```
 
-# bonus: distilbert before
+## bonus: distilbert before
 
+```
 Epoch: 0001/0001 | Batch 0000/0729 | Loss: 0.7085
 Epoch: 0001/0001 | Batch 0300/0729 | Loss: 0.4883
 Epoch: 0001/0001 | Batch 0600/0729 | Loss: 0.3101
@@ -203,9 +259,11 @@ Epoch: 0001/0001 | Train acc.: 90.55% | Val acc.: 92.99%
 Test accuracy: 92.95%
 Total training time: 0.71 min
 Memory used: 3.99 GB
+```
 
 # bonus distilbert after
 
+```
 Epoch: 0001/0001 | Batch 0000/2916 | Loss: 0.1748
 Epoch: 0001/0001 | Batch 0300/2916 | Loss: 0.1943
 Epoch: 0001/0001 | Batch 0600/2916 | Loss: 0.0161
@@ -220,6 +278,7 @@ Epoch: 0001/0001 | Train acc.: 85.37% | Val acc.: 91.43%
 Test accuracy: 90.43%
 Total training time: 5.55 min
 Memory used: 1.15 GB
+```
 
 # bonus bigbird before
 
@@ -227,6 +286,8 @@ N/A
 
 # bonus bigbird after
 
+
+```
 Epoch: 0001/0001 | Batch 0000/8750 | Loss: 0.0697
 Epoch: 0001/0001 | Batch 0300/8750 | Loss: 0.0469
 Epoch: 0001/0001 | Batch 0600/8750 | Loss: 0.0557
@@ -261,3 +322,4 @@ Epoch: 0001/0001 | Train acc.: 88.69% | Val acc.: 93.28%
 Test accuracy: 93.10%
 Total training time: 75.94 min
 Memory used: 4.03 GB
+```
