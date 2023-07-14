@@ -9,8 +9,8 @@ import torch.nn.functional as F
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 import torchmetrics
 from torchvision import transforms
-from torchvision.models import vit_l_16
-from torchvision.models import ViT_L_16_Weights
+from torchvision.models import vit_h_14
+from torchvision.models import ViT_H_14_Weights
 from torchvision.models.vision_transformer import EncoderBlock
 from watermark import watermark
 
@@ -61,14 +61,7 @@ def train(num_epochs, model, optimizer, train_loader, val_loader, fabric):
 
 if __name__ == "__main__":
 
-    auto_wrap_policy = partial(transformer_auto_wrap_policy, transformer_layer_cls={EncoderBlock})
-    strategy = FSDPStrategy(
-        auto_wrap_policy=auto_wrap_policy,
-        activation_checkpointing=EncoderBlock,
-        cpu_offload=True
-    )
-
-    fabric = Fabric(accelerator="cuda", devices=4, strategy=strategy)
+    fabric = Fabric(accelerator="cuda", devices=4, strategy="fsdp", precision="16-mixed")
     fabric.launch()
 
     L.seed_everything(123)
@@ -79,20 +72,23 @@ if __name__ == "__main__":
     ##########################
     ### 1 Loading the Dataset
     ##########################
-    train_transforms = transforms.Compose([transforms.Resize((224, 224)),
+    train_transforms = transforms.Compose([transforms.Resize((518, 518)),
                                            #transforms.RandomCrop((224, 224)),
                                            transforms.ToTensor()])
     
-    test_transforms = transforms.Compose([transforms.Resize((224, 224)),
+    test_transforms = transforms.Compose([transforms.Resize((518, 518)),
                                           #transforms.CenterCrop((224, 224)),
                                           transforms.ToTensor()])
     
-    train_loader, val_loader, test_loader = get_dataloaders_cifar10(
-        batch_size=64, 
-        num_workers=1, 
-        train_transforms=train_transforms,
-        test_transforms=test_transforms,
-        validation_fraction=0.1)
+    with fabric.rank_zero_first():  
+        # the above prevents race conditions when multiple processes 
+        # try to download and write the dataset to disk.
+        train_loader, val_loader, test_loader = get_dataloaders_cifar10(
+            batch_size=4, 
+            num_workers=1, 
+            train_transforms=train_transforms,
+            test_transforms=test_transforms,
+            validation_fraction=0.1)
     
     train_loader, val_loader, test_loader = fabric.setup_dataloaders(
         train_loader, val_loader, test_loader)
@@ -102,13 +98,13 @@ if __name__ == "__main__":
     ### 2 Initializing the Model
     #########################################
 
-    model = vit_l_16(weights=ViT_L_16_Weights.IMAGENET1K_V1)
+    model = vit_h_14(weights=ViT_H_14_Weights.IMAGENET1K_SWAG_E2E_V1)
 
     # replace output layer
-    model.heads.head = torch.nn.Linear(in_features=1024, out_features=10)
+    model.heads.head = torch.nn.Linear(in_features=1280, out_features=10)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=5e-5)
-    model, optimizer = fabric.setup(model, optimizer, move_to_device=False)
+    model, optimizer = fabric.setup(model, optimizer)
 
     #########################################
     ### 3 Finetuning
